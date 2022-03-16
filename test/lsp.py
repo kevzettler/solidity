@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import traceback
+from pathlib import PurePath
 
 from typing import Any, List, Optional, Tuple, Union
 
@@ -180,7 +181,8 @@ class SolidityLSPTestSuite: # {{{
         args = create_cli_parser().parse_args()
         self.solc_path = args.solc_path
         self.project_root_dir = os.path.realpath(args.project_root_dir) + "/test/libsolidity/lsp"
-        self.project_root_uri = "file://" + self.project_root_dir
+        self.project_root_dir = self.project_root_dir
+        self.project_root_uri = PurePath(self.project_root_dir).as_uri()
         self.print_assertions = args.print_assertions
         self.trace_io = args.trace_io
         self.test_pattern = args.test_pattern
