@@ -38,6 +38,15 @@ def process_commandline() -> Namespace:
         type=int,
         help="Github PR ID that the job ran on. Will fetch benchmark from the last run on that PR.",
     )
+    target_definition.add_argument(
+        '--base-of-pr',
+        dest='base_of_pr',
+        type=int,
+        help=(
+            "ID of a Github PR that's based on top of the branch we're interested in. "
+            "Will fetch benchmark from the last run on that branch."
+        )
+    )
 
     parser.add_argument(
         '--debug-requests',
@@ -70,15 +79,19 @@ def main():
     try:
         options = process_commandline()
 
+        github = Github('ethereum/solidity', options.debug_requests)
+        circleci = CircleCI('ethereum/solidity', options.debug_requests)
+
         branch = options.branch
-        if options.branch is None and options.pull_request_id is None:
+        if options.branch is None and options.pull_request_id is None and options.base_of_pr is None:
             branch = get_current_git_branch()
-        if options.pull_request_id is not None:
-            github = Github('ethereum/solidity', options.debug_requests)
+        elif options.pull_request_id is not None:
             pr_info = github.pull_request(options.pull_request_id)
             branch = pr_info['head']['ref']
+        elif options.base_of_pr is not None:
+            pr_info = github.pull_request(options.base_of_pr)
+            branch = pr_info['base']['ref']
 
-        circleci = CircleCI('ethereum/solidity', options.debug_requests)
         pipeline = circleci.latest_item(circleci.pipelines(branch))
         pipeline_id = pipeline['id']
         commit_hash = pipeline['vcs']['revision']
