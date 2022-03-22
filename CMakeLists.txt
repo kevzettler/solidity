@@ -48,3 +48,4 @@ set(EXECUTABLE solidity)
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 # TODO installation and packaging rules
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${CMAKE_CURRENT_SOURCE_DIR}")
