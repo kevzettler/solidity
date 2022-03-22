@@ -28,7 +28,8 @@ RUN sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-de
 libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev \
 libmicrohttpd-dev libjsoncpp-dev libargtable2-dev \
 libedit-dev mesa-common-dev ocl-icd-libopencl1 opencl-headers \
-ocl-icd-dev qtbase5-dev qt5-default qtdeclarative5-dev libqt5webkit5-dev
+ocl-icd-dev qtbase5-dev qt5-default qtdeclarative5-dev libqt5webkit5-dev \
+libv8-3.14-dev
 
 ## these are failing to install and will need to be manually compiled
 # libqt5webengine5-dev libcryptopp-dev libv8-dev libjson-rpc-cpp-dev llvm-3.7-dev libgoogle-perftools-dev
@@ -37,20 +38,46 @@ RUN git clone https://github.com/ethereum/cpp-ethereum-cmake
 WORKDIR "/home/cpp-ethereum-cmake"
 RUN git checkout 412c066ef83525c6d48217398fc200964df5737f
 
-WORKDIR "/home/"
-RUN git clone https://github.com/ethereumproject/cpp-ethereum.git
-WORKDIR "/home/cpp-ethereum"
-RUN git checkout tags/foundationwallet
-
-
 ## Manually build cryptopp 562
 WORKDIR "/home/"
 RUN mkdir cryptopp562
 WORKDIR "/home/cryptopp562"
 RUN wget --no-check-certificate https://cryptopp.com/cryptopp562.zip
 RUN unzip cryptopp562.zip
+# edit makefile to uncomment and enable -fPIC
+RUN sed 's/# CXXFLAGS += -fPIC/CXXFLAGS += -fPIC/g' GNUmakefile > GNUmakefile
 RUN make
 RUN sudo make install
+
+WORKDIR "/home/"
+RUN git clone --depth 1 --branch v2.2.2 https://github.com/gflags/gflags.git
+WORKDIR "/home/gflags"
+RUN cmake .
+RUN make
+RUN make install
+
+WORKDIR "/home/"
+RUN git clone --depth 1 --branch 2.7.fb https://github.com/facebook/rocksdb.git
+WORKDIR "/home/rocksdb"
+RUN make
+
+WORKDIR "/home/"
+RUN git clone --depth 1 --branch v0.4 https://github.com/cinemast/libjson-rpc-cpp.git
+WORKDIR "/home/libjson-rpc-cpp"
+RUN cmake .
+RUN make
+RUN make install
+
+WORKDIR "/home/"
+RUN git clone https://github.com/ethereumproject/cpp-ethereum.git
+WORKDIR "/home/cpp-ethereum"
+RUN git checkout tags/foundationwallet
+RUN cmake \
+    -DGUI=off \
+    -DROCKSDB_INCLUDE_DIR=/home/rocksdb/include \
+    -DROCKSDB_LIBRARY=/home/rocksdb \
+    .
+RUN make
 
 WORKDIR "/home/"
 COPY . /home/solidity
@@ -59,7 +86,6 @@ WORKDIR "/home/solidity"
 # RUN git checkout tags/v0.1.2
 RUN mkdir build
 WORKDIR "/home/solidity/build"
-
 RUN cmake ../
 ## TODO can run other makes? like `make solc`
 RUN make
