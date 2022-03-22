@@ -45,7 +45,7 @@ WORKDIR "/home/cryptopp562"
 RUN wget --no-check-certificate https://cryptopp.com/cryptopp562.zip
 RUN unzip cryptopp562.zip
 # edit makefile to uncomment and enable -fPIC
-RUN sed 's/# CXXFLAGS += -fPIC/CXXFLAGS += -fPIC/g' GNUmakefile > GNUmakefile
+RUN sed -i 's/# CXXFLAGS += -fPIC/CXXFLAGS += -fPIC/g' GNUmakefile
 RUN make
 RUN sudo make install
 
