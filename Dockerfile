@@ -89,3 +89,4 @@ WORKDIR "/home/solidity/build"
 RUN cmake ../
 ## TODO can run other makes? like `make solc`
 RUN make
+CMD "/home/cpp-ethereum/solc/solc"
